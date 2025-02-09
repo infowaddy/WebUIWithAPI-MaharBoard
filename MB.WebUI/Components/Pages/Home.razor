@@ -1,72 +1,198 @@
 ﻿@page "/"
+@inject APIServices.MaharboardService MaharboardService
+@using MB.Model
+@using System.Text.Json
+@using System.ComponentModel.DataAnnotations
+@rendermode InteractiveServer
 
 <PageTitle>Home</PageTitle>
 
-<form class="bg-light border row">
-        <div class="container m-3 col-3 border-1 border-end">
-            <div class="mb-3 row">
-                <div class="col-sm-2">
-                    <label for="birthday" class="col-sm-2">မွေးနေ့</label>
-                </div>
-                <div class="col-sm-3 w-75">
-                    <DateInput TValue="DateOnly" @bind-Value="@date1" Placeholder="Enter Date" />
-                </div>
-            </div>
-            <div class="mb-3 row">
-                <div class="col-sm-2">
-                    <label for="gender" class="col-sm-2"></label>
-                </div>
-                <div class="col-sm-2  w-50">
-                    <div class="form-check">
-                        <input class="form-check-input" type="radio" name="male" id="male">
-                        <label class="form-check-label" for="male">
-                            ယောက်ကျား
-                        </label>
-                    </div>
-                </div>
-                <div class="col-sm-2">
-                    <div class="form-check">
-                        <input class="form-check-input" type="radio" name="female" id="female">
-                        <label class="form-check-label" for="female">
-                            မိန်းမ
-                        </label>
-                    </div>
+<div class="card">
+    <div class="row m-3">
+        <EditForm FormName="Maharboard" Model="@maharboard" class="col-lg-4 col-md-4 col-sm-12 ps-3 pt-3" OnValidSubmit="CalculateResult">
+            <AntiforgeryToken />
+            <DataAnnotationsValidator />
+            @* <ValidationSummary /> *@
+            <!-- Name Field -->
+            <div class="mb-3 row ">
+                <label for="name" class="col-3 col-sm-3 col-form-label">နာမည်</label>
+                <div class="col-9 col-sm-9 pt-1">
+                    <InputText class="form-control" @bind-value="@maharboard.Name"  placeholder="Enter Name" />
+                    <ValidationMessage For="@(() => maharboard.Name)" class="text-danger" />
                 </div>
             </div>
+
+            <!-- Birthdate Field -->
             <div class="mb-3 row">
-                <div class="col-sm-2">
-                    </div>
-                <div class="col-sm-3 w-50">
-                    <button type="button" class="btn btn-primary w-100">တွက်ပါ။</button>
-
+                <label for="birthday" class="col-3 col-sm-3 col-form-label">မွေးနေ့</label>
+                <div class="col-9 col-sm-9 pt-1">
+                    <input type="date" class="form-control" id="birthdate" @bind="@maharboard.BirthDate" placeholder="Enter Name">
+                    <ValidationMessage For="@(() => maharboard.BirthDate)" class="text-danger" />
                 </div>
-        </div>
-        </div>
+            </div>
 
-        <div class="container me-3 mt-3 mb-3 col w-100">
+            <!-- Gender Radio Buttons -->
+            <div class="mb-3 row">
+                <label class="col-3 col-sm-3 col-form-label">ကျား/မ</label>
+                <div class="col-9 col-sm-9 pt-2">
+                    <InputRadioGroup @bind-Value="@maharboard.Gender" class="form-check">
+                        <div class="form-check-inline me-3">
+                            <InputRadio id="male" class="form-check-input" Value="@Gender.Male" />
+                            <label class="form-check-label" for="male">ယောက်ျား</label>
+                        </div>
+                        <div class="form-check-inline">
+                            <InputRadio id="female" class="form-check-input" Value="@Gender.Female" />
+                            <label class="form-check-label" for="female">မိန်းမ</label>
+                        </div>
+                    </InputRadioGroup>
+                    <ValidationMessage For="@(() => maharboard.Gender)" class="text-danger" />
+                </div>
+            </div>
+
+            <!-- Terms & Conditions Checkbox -->
+            <div class="mb-3 row">
+                <div class="col-9 offset-3 col-sm-9 offset-sm-3">
+                    <div class="form-check">
+                        <InputCheckbox class="form-check-input" id="terms" @bind-value="@maharboard.AgreeTerms" @onchange="ValidateForm" />
+                        <label class="form-check-label" for="terms">
+                            <a href="#" data-bs-toggle="modal" data-bs-target="#termsModal">ဗေဒင်၏ အကျိုးအပြစ်များ</a> ကို သိရှိ သဘောတူသည်။
+                        </label>
+                    </div>
+                    <ValidationMessage For="@(() => maharboard.AgreeTerms)" class="text-danger" />
+                </div>
+            </div>
+
+            <!-- Submit Button -->
+            <div class="mb-3 row">
+                <div class="col-9 offset-3 col-sm-9 offset-sm-3">
+                    <button type="submit" class="btn btn-primary w-100">တွက်ပါ။</button>
+                </div>
+            </div>
+
+        </EditForm>
+
+        <!-- Right-side Card Content -->
+        <div class="col-lg-8 col-md-8 col-sm-12">
             <div class="card">
                 <div class="card-body">
-                    <h5 class="card-title">မဟာဘုတ် ဗေဒင်</h5>
-                    <p class="card-text">
-                        မဟာဘုတ်ဗေဒင်သည် မြန်မာရိုးရာ လက်ဆန်းဗေဒင် တွက်နည်း တစ်ခုဖြစ်သည်။ မြန်မာရိုးရာဗေဒင်ပညာများတွင် လဂ်ရိုးနှင့် လက်ဆန်းဟု၍ ၂ မျိုးရှိပြီး ာာာာာာာ 
-                        လဂ်ရိုး ပညာသည် နက္ခတ်ဗေဒင်တွက်ကိန်းများအပေါ်အခြေခံ၍ ဇာတာဖွဲ့ကာ ဟောပြောရပြီး၊ လက်ဆန်းသည် ဇာတာမဖွဲပဲ သင်္ချာတွက်ကိန်းများဖြစ် လွယ်လင့် တကူ
-                        ဟောပြောသော ပညာဖြစ်သည်။
-                    </p>
-                    <p>
-                        ဗဟာဘုတ်ဗေဒင်သည်လည်း မြန်မာ ေမွေးနေ့သက္ကရာဇ်ကို ၇ နှင့်စားက ရရှိသော အကြွင်းအပေါ်မူတည်၍ မွေးနေ့အလိုက် အဓိပတိဖွား၊ 
-                        ရာဇဖွား စတည်ဖြင့် အဖွားများကို တွက်ချက်ကာ ေဟောပြောရသောနည်းဖြစ်သည်။
-                    </p>
-                    <p>
-                        မဟာဘုတ်ဗေဒင် အဟောများကို ဆရာကြီး ဦးမောင်မောင်ကြည်(သေသဝိဇ္ဇာ) ၏
-                    <a href="https://www.scribd.com/document/572006125/%E1%80%99%E1%80%BC%E1%80%94-%E1%80%99%E1%80%AC-%E1%80%9C%E1%80%80-%E1%80%86%E1%80%94-%E1%80%B8%E1%80%97%E1%80%B1%E1%80%92%E1%80%84-%E1%80%80%E1%80%BB%E1%80%99-%E1%80%B8">
-                            မြန်မာ့လက်ဆန်းဗေဒင်ကျမ်း</a> စာအုပ်မှ ရယူထားပြီး တွက်ချက်သည့် Algorithum ကို ကျွန်တော်ဇင်မင်းမှ သင်္ချာ Algebra Equation နည်းဖြစ် ပြန်ရေးထားပါသည်။ 
+                    <h3 class="card-title">မဟာဘုတ် ဗေဒင်</h3>
+                    <p class="card-text text-justify">
+                        @if (maharboard.Disclaimer == null || maharboard.Disclaimer.Trim().Length <1)
+                        {
+                            <!-- Bootstrap spinner for loading indication -->
+                            <div class="d-flex justify-content-center">
+                                <div class="spinner-border text-primary" role="status">
+                                    <span class="visually-hidden">Loading...</span>
+                                </div>
+                            </div>
+                        }
+                        else
+                        {
+                            @((MarkupString)maharboard.Disclaimer)
+                        }
                     </p>
                 </div>
             </div>
         </div>
-</form> 
-    
+    </div>
+</div>
+
+<div class="mt-3 ms-0 card">
+    <div class="card-header">
+        <h5>မဟာဘုတ် အဟောများ</h5>
+    </div>
+    <div class="card-body">
+        @if (maharboard.ModResult!=string.Empty)
+        {
+            <p>သင်သည် @maharboard.BurmeseDay @(maharboard.Gender == Gender.Male ? "သား" : "သမီး") @maharboard.Aphwar ဖွားဖြစ်သည်။</p>
+        }
+        else{
+            <p></p>
+        }
+        @((MarkupString)maharboard.MaharboardNumberResult)
+        <br/><hr />
+        @((MarkupString)maharboard.ModResult)
+    </div>
+</div>
+
+<!-- Terms & Conditions Modal -->
+<div class="modal fade" id="termsModal" tabindex="-1" aria-labelledby="termsModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="termsModalLabel">ဗေဒင်၏ အကျိုးအပြစ်များ</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                @if (maharboard.Warning == null || maharboard.Warning.Trim().Length < 1)
+                {
+                    <!-- Bootstrap spinner for loading indication -->
+                    <div class="d-flex justify-content-center">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                    </div>
+                }
+                else
+                {
+                    @maharboard.Warning
+                }
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ပိတ်မည်</button>
+            </div>
+        </div>
+    </div>
+</div>
 
 @code {
-    private DateOnly date1 = DateOnly.FromDateTime(DateTime.Now);
+    private Maharboard maharboard = new Maharboard
+    {
+            BirthDate = new DateTime(1971, 6, 28), // ဝါဆိုဖွား
+            Gender = Gender.Male,
+            Name = "Elon Reeve Musk",
+            AgreeTerms = true
+    };
+    private string result = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        maharboard = await MaharboardService.GetMaharboardResult(maharboard);
+        maharboard.Name = string.Empty;
+        maharboard.Gender = null;
+        maharboard.BirthDate = DateTime.Now;
+        maharboard.AgreeTerms = false;
+        maharboard.MaharboardNumberResult = string.Empty;
+        maharboard.ModResult = string.Empty;
+    }
+
+    private void Reset(Maharboard _maharboard)
+    {
+        _maharboard.Name = string.Empty;
+        _maharboard.Gender = null;
+        _maharboard.BirthDate = DateTime.Now;
+        _maharboard.AgreeTerms = false;
+    }
+    private async Task CalculateResult(EditContext editContext)
+    {
+        if (!editContext.Validate()) // Check validation manually
+        {
+            return; // Stop if validation fails
+        }
+
+        try
+        {
+            maharboard = await MaharboardService.GetMaharboardResult(maharboard);
+            maharboard.AgreeTerms = false;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error: {ex.Message}");
+        }
+    }
+
+    private void ValidateForm(ChangeEventArgs e)
+    {
+        StateHasChanged(); // Force UI update to reflect validation changes
+    }
 }

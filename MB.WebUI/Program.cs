@@ -1,3 +1,4 @@
+using MB.WebUI.APIServices;
 using MB.WebUI.Components;
 
 namespace MB.WebUI
@@ -10,8 +11,15 @@ namespace MB.WebUI
 
             // Add services to the container.
             builder.Services.AddRazorComponents()
-                .AddInteractiveServerComponents();
-            builder.Services.AddBlazorBootstrap();
+                .AddInteractiveServerComponents();            
+
+            // Register HttpClient for MaharBoard API with a base address
+            builder.Services.AddHttpClient("MaharboardService", client =>
+            {
+                client.BaseAddress = new Uri(builder.Configuration["ApiBaseUrl"]); // Replace with your API URL
+            });
+            builder.Services.AddTransient<MaharboardService>(); 
+
             var app = builder.Build();
 
             // Configure the HTTP request pipeline.

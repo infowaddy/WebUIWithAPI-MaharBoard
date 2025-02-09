@@ -1,0 +1,7 @@
+﻿/* Override Bootstrap container restrictions */
+.card .container {
+    max-width: 100% !important;
+}
+.invalid {
+    border-color: red !important;
+}
