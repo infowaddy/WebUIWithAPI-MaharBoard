@@ -105,13 +105,16 @@
         @if (maharboard.ModResult!=string.Empty)
         {
             <p>သင်သည် @maharboard.BurmeseDay @(maharboard.Gender == Gender.Male ? "သား" : "သမီး") @maharboard.Aphwar ဖွားဖြစ်သည်။</p>
+            @((MarkupString)maharboard.MaharboardNumberResult)
+            <br />
+
+            <hr />
+            @((MarkupString)maharboard.ModResult)
         }
         else{
             <p></p>
         }
-        @((MarkupString)maharboard.MaharboardNumberResult)
-        <br/><hr />
-        @((MarkupString)maharboard.ModResult)
+        
     </div>
 </div>
 
